@@ -10,23 +10,44 @@
 
 
     <script>
-        const dataset = Array.from({length:15}, ()=>Math.floor(Math.random()*30));
+
         const width = 400;
-        const height = 100;
+        const height = 300;
 
         const chart = d3.select("#chart")
           .attr("width", width)
           .attr("height", height);
 
+        const url = 'http://www.cs.middlebury.edu/~candrews/classes/cs465-f18/data/dr_who.csv';
 
-        chart.selectAll("rect")
-        .data(dataset)
-        .enter()
-        .append("rect")
-        .attr("x",(d,i)=>i*10)
-        .attr("y",(d)=> (height - d))
-        .attr("width", 9)
-        .attr("height",(d)=> d);
+        d3.csv(url).then((data)=>{
+          console.log(data);
+
+          const y_scale = d3.scaleLinear()
+            .range([0,height])
+            .domain([0, d3.max(data, (d)=>+d.episodes)]);
+
+          const x_scale = d3.scaleBand()
+            .rangeRound([0, width])
+            .domain(data.map((d)=>d.doctor))
+            .padding(0.1);
+
+          const color_scale = d3.scaleLinear()
+            .range(['grey', 'blue'])
+            .domain([0, d3.max(data, (d)=>+d.duration)]);
+
+          chart.selectAll("rect")
+          .data(data)
+          .enter()
+          .append("rect")
+          .attr("x",(d)=>x_scale(d.doctor))
+          .attr("y",(d)=> (height - y_scale(d.episodes)))
+          .attr("width", x_scale.bandwidth())
+          .attr("height",(d)=> y_scale(d.episodes))
+          .style("fill",(d)=> color_scale(d.duration));
+
+      });
+
     </script>
 </body>
 </html>
